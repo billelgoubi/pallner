@@ -1,7 +1,10 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { UserProfile, DayPlan, Task } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Safely initialize the AI client. 
+// If API_KEY is missing, we don't crash immediately, but subsequent calls will fail gracefully.
+const apiKey = process.env.API_KEY || '';
+const ai = new GoogleGenAI({ apiKey });
 
 const taskSchema: Schema = {
   type: Type.OBJECT,
@@ -30,7 +33,10 @@ const planSchema: Schema = {
 };
 
 export const generateHolidayPlan = async (profile: UserProfile): Promise<DayPlan[]> => {
-  
+  if (!apiKey) {
+    throw new Error("عذراً، مفتاح API غير موجود. يرجى إعداد التطبيق بشكل صحيح.");
+  }
+
   const prompt = `
     Create a 15-day holiday plan for a student with the following profile:
     Name: ${profile.name}
@@ -106,6 +112,8 @@ export const generateHolidayPlan = async (profile: UserProfile): Promise<DayPlan
 };
 
 const generateSingleImage = async (prompt: string): Promise<string | null> => {
+  if (!apiKey) return null;
+  
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -127,6 +135,8 @@ const generateSingleImage = async (prompt: string): Promise<string | null> => {
 };
 
 export const generateInspirationalImages = async (): Promise<string[]> => {
+  if (!apiKey) return [];
+
   // Generate 2 images in parallel
   const prompts = [
     "A bright and cheerful illustration of a clean study desk for a child with colorful books, pencils, a small plant, and sunlight streaming through a window with Islamic geometric patterns. No humans, no faces. 3D cartoon style, high quality, vibrant colors.",
